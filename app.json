@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "home ai",
-    "slug": "homedesignerapp",
+    "slug": "home-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./app/assets/images/icon.png",
@@ -46,8 +46,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "8f066201-b5b9-4c93-96ec-8fb9d30555bc"
+        "projectId": "0c729138-c746-4280-981a-1c8f83827d84"
       }
-    }
+    },
+    "owner": "ykpatels-organization"
   }
 }
