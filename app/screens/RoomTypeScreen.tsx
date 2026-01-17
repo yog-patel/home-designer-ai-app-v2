@@ -1,19 +1,21 @@
+import { getIconComponent } from '@/components/icons';
+import { EXTERIOR_TYPES, FLOOR_TYPES, GARDEN_TYPES, PAINT_TYPES, REPLACE_TYPES, ROOM_TYPES } from '@/config/constants';
+import { BorderRadius, Colors, Gradients, Shadows, Spacing, Typography } from '@/constants/theme';
+import { RootStackParamList } from '@/navigation/RootNavigator';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  FlatList,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ROOM_TYPES, EXTERIOR_TYPES, GARDEN_TYPES, PAINT_TYPES, REPLACE_TYPES, FLOOR_TYPES } from '@/config/constants';
-import { RootStackParamList } from '@/navigation/RootNavigator';
-import { getIconComponent } from '@/components/icons';
 
 type RoomTypeScreenProps = NativeStackScreenProps<RootStackParamList, 'RoomType'>;
 type RoomTypeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RoomType'>;
@@ -108,16 +110,25 @@ export default function RoomTypeScreen() {
 
   const RoomItem = ({ item }: any) => {
     const IconComponent = getIconComponent(item.id);
+    const isSelected = selectedRoom === item.id;
     return (
       <TouchableOpacity
         style={[
           styles.roomItem,
-          selectedRoom === item.id && styles.roomItemSelected,
+          isSelected && styles.roomItemSelected,
         ]}
         onPress={() => setSelectedRoom(item.id)}
+        activeOpacity={0.7}
       >
-        <IconComponent size={32} color={selectedRoom === item.id ? '#E31C1C' : '#000'} />
-        <Text style={styles.roomName}>{item.name}</Text>
+        <View style={[styles.roomIconContainer, isSelected && styles.roomIconContainerSelected]}>
+          <IconComponent size={32} color={isSelected ? '#FFFFFF' : Colors.light.text} />
+        </View>
+        <Text style={[styles.roomName, isSelected && styles.roomNameSelected]}>{item.name}</Text>
+        {isSelected && (
+          <View style={styles.checkmarkContainer}>
+            <Ionicons name="checkmark-circle" size={24} color={Colors.light.primary} />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -125,15 +136,22 @@ export default function RoomTypeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color={Colors.light.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Step 2 of 4</Text>
-        <View style={{ width: 30 }} />
+        <View style={styles.stepBadge}>
+          <Text style={styles.headerTitle}>Step 2 of 4</Text>
+        </View>
+        <View style={{ width: 44 }} />
       </View>
 
       <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: '50%' }]} />
+        <LinearGradient
+          colors={Gradients.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.progressFill, { width: '50%' }]}
+        />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -155,8 +173,15 @@ export default function RoomTypeScreen() {
           style={[styles.continueButton, !selectedRoom && styles.continueButtonDisabled]}
           onPress={handleContinue}
           disabled={!selectedRoom}
+          activeOpacity={0.8}
         >
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <LinearGradient
+            colors={selectedRoom ? Gradients.dark : ['#CCCCCC', '#CCCCCC']}
+            style={styles.continueButtonGradient}
+          >
+            <Text style={styles.continueButtonText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -166,97 +191,126 @@ export default function RoomTypeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.light.background,
   },
   backButton: {
-    fontSize: 24,
-    color: '#000',
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepBadge: {
+    backgroundColor: Colors.light.backgroundSecondary,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.textSecondary,
   },
   progressBar: {
     height: 4,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: Colors.light.border,
     width: '100%',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#E31C1C',
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.base,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 8,
+    fontSize: Typography.sizes['3xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-    lineHeight: 20,
+    fontSize: Typography.sizes.base,
+    color: Colors.light.textSecondary,
+    marginBottom: Spacing.xl,
+    lineHeight: Typography.sizes.base * Typography.lineHeights.relaxed,
   },
   grid: {
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   roomItem: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 6,
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.base,
+    marginHorizontal: Spacing.xs,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#E8E8E8',
+    borderColor: Colors.light.border,
+    position: 'relative',
+    ...Shadows.sm,
   },
   roomItemSelected: {
-    borderColor: '#E31C1C',
-    backgroundColor: '#FFF5F5',
+    borderColor: Colors.light.primary,
+    backgroundColor: `${Colors.light.primary}08`,
   },
-  roomIcon: {
-    fontSize: 32,
-    marginBottom: 8,
+  roomIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.light.backgroundSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  roomIconContainerSelected: {
+    backgroundColor: Colors.light.primary,
   },
   roomName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.text,
     textAlign: 'center',
   },
+  roomNameSelected: {
+    color: Colors.light.primary,
+  },
+  checkmarkContainer: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+  },
   footer: {
-    padding: 16,
+    padding: Spacing.base,
     borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
+    borderTopColor: Colors.light.border,
+    backgroundColor: Colors.light.background,
   },
   continueButton: {
-    backgroundColor: '#000',
-    paddingVertical: 14,
-    borderRadius: 24,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+  continueButtonGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.base,
+    gap: Spacing.sm,
   },
   continueButtonDisabled: {
-    backgroundColor: '#CCC',
+    opacity: 0.6,
   },
   continueButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
   },
 });

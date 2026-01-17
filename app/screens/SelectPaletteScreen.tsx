@@ -1,20 +1,20 @@
+import { COLOR_PALETTES } from '@/config/constants';
+import { BorderRadius, Colors, Gradients, Shadows, Spacing, Typography } from '@/constants/theme';
+import { RootStackParamList } from '@/navigation/RootNavigator';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  FlatList,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { COLOR_PALETTES } from '@/config/constants';
-import { RootStackParamList } from '@/navigation/RootNavigator';
-import { getUserId } from '@/config/storage';
-import { uploadImage, checkUsage } from '@/config/api';
 
 type SelectPaletteScreenProps = NativeStackScreenProps<RootStackParamList, 'SelectPalette'>;
 type SelectPaletteScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SelectPalette'>;
@@ -99,18 +99,20 @@ export default function SelectPaletteScreen() {
 
   const PaletteItem = ({ item }: any) => {
     const isPaint = isPaintAction;
+    const isSelected = selectedPalette === item.id;
     return (
       <TouchableOpacity
         style={[
           styles.paletteItem,
-          selectedPalette === item.id && styles.paletteItemSelected,
+          isSelected && styles.paletteItemSelected,
         ]}
         onPress={() => setSelectedPalette(item.id)}
+        activeOpacity={0.7}
       >
         {isPaint ? (
           <>
             <View style={[styles.paintColor, { backgroundColor: item.color }]} />
-            <Text style={styles.paletteName}>{item.name}</Text>
+            <Text style={[styles.paletteName, isSelected && styles.paletteNameSelected]}>{item.name}</Text>
           </>
         ) : (
           <>
@@ -122,8 +124,13 @@ export default function SelectPaletteScreen() {
                 />
               ))}
             </View>
-            <Text style={styles.paletteName}>{item.name}</Text>
+            <Text style={[styles.paletteName, isSelected && styles.paletteNameSelected]}>{item.name}</Text>
           </>
+        )}
+        {isSelected && (
+          <View style={styles.checkmarkBadge}>
+            <Ionicons name="checkmark-circle" size={22} color={Colors.light.primary} />
+          </View>
         )}
       </TouchableOpacity>
     );
@@ -132,15 +139,22 @@ export default function SelectPaletteScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color={Colors.light.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{stepText}</Text>
-        <View style={{ width: 30 }} />
+        <View style={styles.stepBadge}>
+          <Text style={styles.headerTitle}>{stepText}</Text>
+        </View>
+        <View style={{ width: 44 }} />
       </View>
 
       <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: progressPercentage }]} />
+        <LinearGradient
+          colors={Gradients.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.progressFill, { width: progressPercentage }]}
+        />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -157,9 +171,16 @@ export default function SelectPaletteScreen() {
                   selectedPalette === color.id && styles.paintItemSelected,
                 ]}
                 onPress={() => setSelectedPalette(color.id)}
+                activeOpacity={0.7}
               >
-                <View style={[styles.paintColor, { backgroundColor: color.color }]} />
-                <Text style={styles.colorName}>{color.name}</Text>
+                <View style={[styles.paintColorSwatch, { backgroundColor: color.color }]}>
+                  {selectedPalette === color.id && (
+                    <View style={styles.paintCheckmark}>
+                      <Ionicons name="checkmark" size={20} color={color.color === '#FFFFFF' || color.color === '#FFFDD0' || color.color === '#F5F5DC' || color.color === '#FFFF00' ? '#000000' : '#FFFFFF'} />
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.colorName, selectedPalette === color.id && styles.colorNameSelected]}>{color.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -169,7 +190,7 @@ export default function SelectPaletteScreen() {
             renderItem={PaletteItem}
             keyExtractor={(item) => item.id}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            ItemSeparatorComponent={() => <View style={{ height: Spacing.md }} />}
           />
         )}
       </ScrollView>
@@ -179,8 +200,15 @@ export default function SelectPaletteScreen() {
           style={[styles.continueButton, !selectedPalette && styles.continueButtonDisabled]}
           onPress={handleContinue}
           disabled={!selectedPalette || loading}
+          activeOpacity={0.8}
         >
-          <Text style={styles.continueButtonText}>{buttonText}</Text>
+          <LinearGradient
+            colors={selectedPalette ? Gradients.primary : ['#CCCCCC', '#CCCCCC']}
+            style={styles.continueButtonGradient}
+          >
+            <Text style={styles.continueButtonText}>{buttonText}</Text>
+            <Ionicons name={isPaintAction ? 'brush' : 'sparkles'} size={20} color="#FFFFFF" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -190,129 +218,173 @@ export default function SelectPaletteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.light.background,
   },
   backButton: {
-    fontSize: 24,
-    color: '#000',
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepBadge: {
+    backgroundColor: Colors.light.backgroundSecondary,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.textSecondary,
   },
   progressBar: {
     height: 4,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: Colors.light.border,
     width: '100%',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#E31C1C',
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.base,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 8,
+    fontSize: Typography.sizes['3xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-    lineHeight: 20,
+    fontSize: Typography.sizes.base,
+    color: Colors.light.textSecondary,
+    marginBottom: Spacing.xl,
+    lineHeight: Typography.sizes.base * Typography.lineHeights.relaxed,
   },
   paletteItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.base,
     borderWidth: 2,
-    borderColor: '#E8E8E8',
+    borderColor: Colors.light.border,
+    position: 'relative',
+    ...Shadows.sm,
   },
   paletteItemSelected: {
-    borderColor: '#E31C1C',
-    backgroundColor: '#FFF5F5',
+    borderColor: Colors.light.primary,
+    backgroundColor: `${Colors.light.primary}08`,
   },
   colorRow: {
     flexDirection: 'row',
-    height: 40,
-    marginBottom: 8,
-    borderRadius: 8,
+    height: 48,
+    marginBottom: Spacing.sm,
+    borderRadius: BorderRadius.md,
     overflow: 'hidden',
   },
   colorBox: {
     flex: 1,
   },
   paletteName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: Typography.sizes.base,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.text,
+  },
+  paletteNameSelected: {
+    color: Colors.light.primary,
+  },
+  checkmarkBadge: {
+    position: 'absolute',
+    top: Spacing.md,
+    right: Spacing.md,
   },
   footer: {
-    padding: 16,
+    padding: Spacing.base,
     borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
+    borderTopColor: Colors.light.border,
+    backgroundColor: Colors.light.background,
   },
   continueButton: {
-    backgroundColor: '#000',
-    paddingVertical: 14,
-    borderRadius: 24,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+  continueButtonGradient: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.base,
+    gap: Spacing.sm,
   },
   continueButtonDisabled: {
-    backgroundColor: '#CCC',
+    opacity: 0.6,
   },
   continueButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#FFFFFF',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
   },
   paintGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: Spacing['2xl'],
   },
   paintItem: {
     width: '30%',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 8,
-    borderRadius: 12,
+    marginBottom: Spacing.base,
+    paddingBottom: Spacing.sm,
+    borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    borderColor: '#E8E8E8',
-    padding: 8,
+    borderColor: Colors.light.border,
+    padding: Spacing.sm,
+    backgroundColor: Colors.light.background,
+    ...Shadows.sm,
   },
   paintItemSelected: {
-    borderColor: '#E31C1C',
-    backgroundColor: '#FFF5F5',
+    borderColor: Colors.light.primary,
+    backgroundColor: `${Colors.light.primary}08`,
+  },
+  paintColorSwatch: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paintCheckmark: {
+    width: 28,
+    height: 28,
+    borderRadius: BorderRadius.full,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  colorName: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.text,
+    textAlign: 'center',
+  },
+  colorNameSelected: {
+    color: Colors.light.primary,
   },
   paintColor: {
     width: 60,
     height: 60,
-    borderRadius: 8,
-    marginBottom: 8,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: '#DDD',
-  },
-  colorName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000',
-    textAlign: 'center',
+    borderColor: Colors.light.border,
   },
 });

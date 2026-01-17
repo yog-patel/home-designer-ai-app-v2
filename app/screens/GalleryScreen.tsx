@@ -1,20 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  FlatList,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { getUserId } from '@/config/storage';
+import { supabase } from '@/config/supabase';
+import { BorderRadius, Colors, Gradients, Shadows, Spacing, Typography } from '@/constants/theme';
+import { RootStackParamList } from '@/navigation/RootNavigator';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigation/RootNavigator';
-import { supabase } from '@/config/supabase';
-import { getUserId } from '@/config/storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
+import {
+    ActivityIndicator,
+    FlatList,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'HomeTabs'>;
 
@@ -63,7 +65,7 @@ export default function GalleryScreen({ navigation }: any) {
     <TouchableOpacity 
       style={styles.designCard}
       onPress={() => handleImagePress(item)}
-      activeOpacity={0.7}
+      activeOpacity={0.9}
     >
       {item.generated_image && (
         <Image
@@ -72,11 +74,23 @@ export default function GalleryScreen({ navigation }: any) {
           resizeMode="cover"
         />
       )}
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        style={styles.designOverlay}
+      />
       <View style={styles.designInfo}>
-        <Text style={styles.designRoom}>{item.room_type}</Text>
-        <Text style={styles.designStyle}>{item.style}</Text>
+        <View style={styles.designMeta}>
+          <View style={styles.designBadge}>
+            <Text style={styles.designRoom}>{item.room_type}</Text>
+          </View>
+          <Text style={styles.designStyle}>{item.style}</Text>
+        </View>
         <Text style={styles.designDate}>
-          {new Date(item.created_at).toLocaleDateString()}
+          {new Date(item.created_at).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: 'numeric'
+          })}
         </Text>
       </View>
     </TouchableOpacity>
@@ -86,7 +100,8 @@ export default function GalleryScreen({ navigation }: any) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#E31C1C" />
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <Text style={styles.loadingText}>Loading designs...</Text>
         </View>
       </SafeAreaView>
     );
@@ -96,14 +111,38 @@ export default function GalleryScreen({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>My Designs</Text>
+        <View style={styles.countBadge}>
+          <Text style={styles.countText}>{designs.length}</Text>
+        </View>
       </View>
 
       {designs.length === 0 ? (
         <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconContainer}>
+            <LinearGradient
+              colors={Gradients.primary}
+              style={styles.emptyIconGradient}
+            >
+              <Ionicons name="images-outline" size={48} color="#FFFFFF" />
+            </LinearGradient>
+          </View>
           <Text style={styles.emptyTitle}>No Designs Yet</Text>
           <Text style={styles.emptyMessage}>
-            Create your first design to see it here
+            Your AI-generated designs will appear here.{'\n'}Start creating to see the magic!
           </Text>
+          <TouchableOpacity 
+            style={styles.emptyButton}
+            onPress={() => navigation.navigate('Home')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={Gradients.primary}
+              style={styles.emptyButtonGradient}
+            >
+              <Ionicons name="add" size={20} color="#FFFFFF" />
+              <Text style={styles.emptyButtonText}>Create Design</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -114,6 +153,7 @@ export default function GalleryScreen({ navigation }: any) {
           columnWrapperStyle={styles.grid}
           contentContainerStyle={styles.listContent}
           scrollEnabled={true}
+          showsVerticalScrollIndicator={false}
         />
       )}
     </SafeAreaView>
@@ -123,88 +163,148 @@ export default function GalleryScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    backgroundColor: Colors.light.background,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
+    borderBottomColor: Colors.light.borderLight,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#000',
+    fontSize: Typography.sizes['2xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+  },
+  countBadge: {
+    backgroundColor: Colors.light.primary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  countText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingText: {
+    fontSize: Typography.sizes.base,
+    color: Colors.light.textSecondary,
+    marginTop: Spacing.md,
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing['2xl'],
   },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 16,
+  emptyIconContainer: {
+    marginBottom: Spacing.xl,
+  },
+  emptyIconGradient: {
+    width: 100,
+    height: 100,
+    borderRadius: BorderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 8,
+    fontSize: Typography.sizes['2xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+    marginBottom: Spacing.sm,
   },
   emptyMessage: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: Typography.sizes.base,
+    color: Colors.light.textSecondary,
     textAlign: 'center',
+    lineHeight: Typography.sizes.base * Typography.lineHeights.relaxed,
+    marginBottom: Spacing.xl,
+  },
+  emptyButton: {
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+  emptyButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  emptyButtonText: {
+    fontSize: Typography.sizes.base,
+    fontWeight: Typography.weights.semibold,
+    color: '#FFFFFF',
   },
   grid: {
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    paddingHorizontal: Spacing.sm,
   },
   listContent: {
-    padding: 8,
+    padding: Spacing.sm,
   },
   designCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    margin: 8,
+    borderRadius: BorderRadius.xl,
+    margin: Spacing.sm,
     overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: Colors.light.background,
+    ...Shadows.lg,
   },
   designImage: {
     width: '100%',
-    height: 150,
-    backgroundColor: '#E8E8E8',
+    height: 180,
+    backgroundColor: Colors.light.backgroundTertiary,
+  },
+  designOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '60%',
   },
   designInfo: {
-    padding: 12,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: Spacing.md,
+  },
+  designMeta: {
+    marginBottom: Spacing.xs,
+  },
+  designBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    alignSelf: 'flex-start',
+    marginBottom: Spacing.xs,
   },
   designRoom: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
+    color: '#FFFFFF',
     textTransform: 'capitalize',
   },
   designStyle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
-    marginVertical: 2,
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF',
     textTransform: 'capitalize',
   },
   designDate: {
-    fontSize: 11,
-    color: '#999',
+    fontSize: Typography.sizes.xs,
+    color: 'rgba(255,255,255,0.7)',
   },
 });

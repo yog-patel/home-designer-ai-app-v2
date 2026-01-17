@@ -1,20 +1,19 @@
+import { Ionicons } from '@expo/vector-icons';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Modal,
-  FlatList,
-  ActivityIndicator,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
-import { Image } from 'expo-image';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { BorderRadius, Colors, Gradients, Shadows, Spacing, Typography } from '../constants/theme';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
 type UploadPhotoScreenProps = NativeStackNavigationProp<RootStackParamList, 'Upload'>;
@@ -81,23 +80,37 @@ export const UploadPhotoScreen: React.FC<Props> = ({ navigation, route }) => {
   const stepText = isPaintAction ? 'Step 1 / 3' : 'Step 1 / 4';
   const progressWidth = isPaintAction ? '33%' : '25%';
 
+  const tips = [
+    { icon: 'sunny-outline', text: 'Good lighting helps', color: '#F59E0B' },
+    { icon: 'camera-outline', text: 'Clear angles work best', color: '#10B981' },
+    { icon: 'phone-landscape-outline', text: 'Landscape orientation', color: '#6366F1' },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={28} color="#000000" />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color={Colors.light.text} />
         </TouchableOpacity>
-        <Text style={styles.stepText}>{stepText}</Text>
-        <View style={{ width: 28 }} />
+        <View style={styles.stepBadge}>
+          <Text style={styles.stepText}>{stepText}</Text>
+        </View>
+        <View style={{ width: 44 }} />
       </View>
 
       {/* Progress Bar */}
       <View style={styles.progressContainer}>
-        <View style={[styles.progressFill, { width: progressWidth }]} />
+        <LinearGradient
+          colors={Gradients.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.progressFill, { width: progressWidth }]}
+        />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} scrollEnabled={true} nestedScrollEnabled={true}>
         <Text style={styles.title}>Add a Photo</Text>
+        <Text style={styles.subtitle}>Upload or capture an image of your space</Text>
 
         {selectedImage ? (
           <View style={styles.imagePreviewContainer}>
@@ -107,43 +120,66 @@ export const UploadPhotoScreen: React.FC<Props> = ({ navigation, route }) => {
               onLoad={() => console.log('Image loaded successfully')}
               onError={(error) => console.error('Image load error:', error)}
             />
-            <TouchableOpacity 
-              onPress={() => setPreviewModalVisible(true)}
-              style={styles.inspectButton}
-            >
-              <MaterialCommunityIcons name="magnify-plus" size={24} color="#FFFFFF" />
-              <Text style={styles.inspectButtonText}>View Fullscreen</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.changeButton} onPress={pickImage}>
-              <MaterialCommunityIcons name="pencil" size={20} color="#FFFFFF" />
-              <Text style={styles.changeButtonText}>Change Photo</Text>
-            </TouchableOpacity>
-            <Text style={styles.debugText}>URI: {selectedImage.substring(0, 50)}...</Text>
+            <View style={styles.imageActions}>
+              <TouchableOpacity 
+                onPress={() => setPreviewModalVisible(true)}
+                style={styles.imageActionButton}
+              >
+                <Ionicons name="expand-outline" size={20} color={Colors.light.text} />
+                <Text style={styles.imageActionText}>View</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.imageActionButton} onPress={pickImage}>
+                <Ionicons name="pencil-outline" size={20} color={Colors.light.text} />
+                <Text style={styles.imageActionText}>Change</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ) : (
           <View style={styles.uploadPlaceholder}>
+            <View style={styles.uploadIconContainer}>
+              <LinearGradient
+                colors={Gradients.primary}
+                style={styles.uploadIconGradient}
+              >
+                <Ionicons name="cloud-upload-outline" size={40} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
             <Text style={styles.uploadText}>Start Redesigning</Text>
             <Text style={styles.uploadSubtext}>Redesign and beautify your room</Text>
 
             <View style={styles.buttonGroup}>
               <TouchableOpacity style={styles.uploadButton} onPress={takePicture}>
-                <MaterialCommunityIcons name="camera" size={32} color="#000000" />
+                <View style={styles.uploadButtonIcon}>
+                  <Ionicons name="camera" size={28} color={Colors.light.primary} />
+                </View>
                 <Text style={styles.uploadButtonText}>Camera</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <MaterialCommunityIcons name="image" size={32} color="#000000" />
+                <View style={styles.uploadButtonIcon}>
+                  <Ionicons name="images" size={28} color={Colors.light.primary} />
+                </View>
                 <Text style={styles.uploadButtonText}>Gallery</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        <Text style={styles.examplesTitle}>Upload Tips</Text>
-        <View style={styles.examplesGrid}>
-          <Text style={styles.exampleTip}>• Good lighting helps</Text>
-          <Text style={styles.exampleTip}>• Clear angles work best</Text>
-          <Text style={styles.exampleTip}>• Landscape orientation</Text>
+        {/* Tips Section */}
+        <View style={styles.tipsSection}>
+          <Text style={styles.tipsTitle}>
+            <Ionicons name="bulb-outline" size={18} color={Colors.light.warning} /> Upload Tips
+          </Text>
+          <View style={styles.tipsGrid}>
+            {tips.map((tip, index) => (
+              <View key={index} style={styles.tipCard}>
+                <View style={[styles.tipIconContainer, { backgroundColor: `${tip.color}15` }]}>
+                  <Ionicons name={tip.icon as any} size={20} color={tip.color} />
+                </View>
+                <Text style={styles.tipText}>{tip.text}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
 
@@ -152,8 +188,15 @@ export const UploadPhotoScreen: React.FC<Props> = ({ navigation, route }) => {
           style={[styles.continueButton, !selectedImage && styles.disabledButton]}
           onPress={handleContinue}
           disabled={!selectedImage}
+          activeOpacity={0.8}
         >
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <LinearGradient
+            colors={selectedImage ? Gradients.dark : ['#CCCCCC', '#CCCCCC']}
+            style={styles.continueButtonGradient}
+          >
+            <Text style={styles.continueButtonText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -164,13 +207,15 @@ export const UploadPhotoScreen: React.FC<Props> = ({ navigation, route }) => {
             style={styles.closeButton}
             onPress={() => setPreviewModalVisible(false)}
           >
-            <MaterialCommunityIcons name="close" size={32} color="#FFFFFF" />
+            <View style={styles.closeButtonCircle}>
+              <Ionicons name="close" size={28} color="#FFFFFF" />
+            </View>
           </TouchableOpacity>
           {selectedImage && (
             <Image
               source={{ uri: selectedImage }}
               style={styles.fullscreenImage}
-              resizeMode="contain"
+              contentFit="contain"
             />
           )}
         </View>
@@ -182,226 +227,207 @@ export const UploadPhotoScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.light.background,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepBadge: {
+    backgroundColor: Colors.light.backgroundSecondary,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
   stepText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666666',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.textSecondary,
   },
   progressContainer: {
     height: 4,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: Colors.light.border,
     width: '100%',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#000000',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.xl,
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 20,
+    fontSize: Typography.sizes['3xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    fontSize: Typography.sizes.base,
+    color: Colors.light.textSecondary,
+    marginBottom: Spacing.xl,
   },
   imagePreviewContainer: {
-    marginBottom: 20,
-    borderRadius: 16,
+    marginBottom: Spacing.xl,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
-    backgroundColor: '#F5F5F5',
-    width: '100%',
-    height: 400,
+    backgroundColor: Colors.light.backgroundSecondary,
+    ...Shadows.lg,
   },
   previewImage: {
     width: '100%',
-    height: 360,
-    backgroundColor: '#F0F0F0',
+    height: 300,
+    backgroundColor: Colors.light.backgroundTertiary,
   },
-  loadingOverlayAbsolute: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    zIndex: 999,
+  imageActions: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.border,
   },
-  errorContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    zIndex: 998,
-  },
-  errorText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  changeButton: {
+  imageActionButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000000',
-    paddingVertical: 12,
-    gap: 8,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
   },
-  changeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+  imageActionText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.text,
   },
   uploadPlaceholder: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 16,
-    paddingVertical: 40,
-    paddingHorizontal: 16,
+    backgroundColor: Colors.light.backgroundSecondary,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing['2xl'],
+    paddingHorizontal: Spacing.base,
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
     borderWidth: 2,
-    borderColor: '#E8E8E8',
+    borderColor: Colors.light.border,
     borderStyle: 'dashed',
   },
+  uploadIconContainer: {
+    marginBottom: Spacing.base,
+  },
+  uploadIconGradient: {
+    width: 80,
+    height: 80,
+    borderRadius: BorderRadius.xl,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   uploadText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 4,
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+    marginBottom: Spacing.xs,
   },
   uploadSubtext: {
-    fontSize: 13,
-    color: '#999999',
-    marginBottom: 24,
+    fontSize: Typography.sizes.sm,
+    color: Colors.light.textSecondary,
+    marginBottom: Spacing.xl,
   },
   buttonGroup: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
     width: '100%',
   },
   uploadButton: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.lg,
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.light.border,
+    ...Shadows.sm,
+  },
+  uploadButtonIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.full,
+    backgroundColor: `${Colors.light.primary}10`,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   uploadButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.text,
   },
-  examplesTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 12,
+  tipsSection: {
+    marginBottom: Spacing['2xl'],
   },
-  examplesGrid: {
-    gap: 8,
-    marginBottom: 30,
+  tipsTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+    marginBottom: Spacing.md,
   },
-  exampleCard: {
-    width: '30%',
-    aspectRatio: 1,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 12,
+  tipsGrid: {
+    gap: Spacing.sm,
+  },
+  tipCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.light.borderLight,
+  },
+  tipIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.base,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
   },
-  exampleEmoji: {
-    fontSize: 40,
-  },
-  exampleTip: {
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+    color: Colors.light.text,
   },
   footer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.light.background,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: Colors.light.borderLight,
   },
   continueButton: {
-    backgroundColor: '#000000',
-    paddingVertical: 14,
-    borderRadius: 24,
-    alignItems: 'center',
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
   },
-  disabledButton: {
-    backgroundColor: '#CCCCCC',
-  },
-  continueButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  imageTouchable: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  inspectOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-  },
-  inspectButton: {
+  continueButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4A90E2',
-    paddingVertical: 12,
-    gap: 8,
-    marginBottom: 8,
-    borderRadius: 8,
+    paddingVertical: Spacing.base,
+    gap: Spacing.sm,
   },
-  inspectButtonText: {
+  disabledButton: {
+    opacity: 0.6,
+  },
+  continueButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  inspectText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  debugText: {
-    fontSize: 10,
-    color: '#666666',
-    marginTop: 8,
-    textAlign: 'center',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
   },
   modalContainer: {
     flex: 1,
@@ -411,9 +437,17 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: 'absolute',
-    top: 40,
-    right: 16,
+    top: 50,
+    right: Spacing.base,
     zIndex: 10,
+  },
+  closeButtonCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   fullscreenImage: {
     width: '100%',

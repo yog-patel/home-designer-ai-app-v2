@@ -1,24 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  Alert,
+    Alert,
+    Dimensions,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { CompositeNavigationProp } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { RootStackParamList, RootStackNavigationProp, TabParamList } from '../navigation/RootNavigator';
-import { getUserId } from '../config/storage';
-import { checkUsage } from '../config/api';
 import SubscriptionModal from '../components/SubscriptionModal';
+import { checkUsage } from '../config/api';
+import { getUserId } from '../config/storage';
+import { BorderRadius, Colors, Gradients, Shadows, Spacing, Typography } from '../constants/theme';
+import { RootStackParamList, TabParamList } from '../navigation/RootNavigator';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 
 type HomeScreenNavigationProps = CompositeNavigationProp<
@@ -102,51 +105,116 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     navigation.navigate('Settings');
   };
 
+  const getFeatureIcon = (action: string) => {
+    switch (action) {
+      case 'interior':
+        return 'sofa-outline';
+      case 'exterior':
+        return 'home-outline';
+      case 'garden':
+        return 'flower-outline';
+      case 'paint':
+        return 'color-palette-outline';
+      default:
+        return 'brush-outline';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.proBadge} onPress={handleProPress}>
-          <MaterialCommunityIcons name="plus-circle" size={12} color="#FFFFFF" />
-          <Text style={styles.proText}>PRO</Text>
+          <LinearGradient
+            colors={Gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.proBadgeGradient}
+          >
+            <Ionicons name="sparkles" size={12} color="#FFFFFF" />
+            <Text style={styles.proText}>PRO</Text>
+          </LinearGradient>
         </TouchableOpacity>
-        <Text style={styles.appTitle}>home ai</Text>
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity onPress={handleSettingsPress}>
-          <Ionicons name="settings-outline" style={{ paddingRight: 12 }} size={24} color="#000000" />
+        <View style={styles.logoContainer}>
+          <Text style={styles.appTitle}>home</Text>
+          <Text style={styles.appTitleAccent}>ai</Text>
+        </View>
+        <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
+          <Ionicons name="settings-outline" size={24} color={Colors.light.text} />
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
-        {/* Usage Counter */}
-        <View style={styles.usageContainer}>
-          {/* <Text style={styles.usageText}> */}
-            {/* {3 - usageCount} free tries remaining */}
-          {/* </Text> */}
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <LinearGradient
+            colors={Gradients.hero}
+            style={styles.heroGradient}
+          >
+            <View style={styles.heroContent}>
+              <Text style={styles.heroTitle}>Transform Your Space</Text>
+              <Text style={styles.heroSubtitle}>
+                AI-powered design at your fingertips
+              </Text>
+              <View style={styles.heroStats}>
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatNumber}>{3 - usageCount}</Text>
+                  <Text style={styles.heroStatLabel}>Free Tries</Text>
+                </View>
+                <View style={styles.heroStatDivider} />
+                <View style={styles.heroStat}>
+                  <Text style={styles.heroStatNumber}>4</Text>
+                  <Text style={styles.heroStatLabel}>Design Tools</Text>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
         </View>
 
         {/* Feature Cards */}
-        {features.map((feature) => (
-          <View key={feature.id} style={styles.featureCard}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Design Tools</Text>
+          <Text style={styles.sectionSubtitle}>Choose a tool to get started</Text>
+        </View>
+
+        {features.map((feature, index) => (
+          <TouchableOpacity
+            key={feature.id}
+            style={styles.featureCard}
+            onPress={() => handleStartDesign(feature.action)}
+            activeOpacity={0.9}
+          >
             <Image
               source={{ uri: feature.image }}
               style={styles.featureImage}
               resizeMode="cover"
             />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.8)']}
+              style={styles.featureOverlay}
+            />
             <View style={styles.featureContent}>
+              <View style={styles.featureIconContainer}>
+                <Ionicons name={getFeatureIcon(feature.action) as any} size={24} color="#FFFFFF" />
+              </View>
               <View style={styles.featureTextContainer}>
                 <Text style={styles.featureTitle}>{feature.title}</Text>
                 <Text style={styles.featureSubtitle}>{feature.subtitle}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.tryButton}
-                onPress={() => handleStartDesign(feature.action)}
-              >
-                <Text style={styles.tryButtonText}>Try It!</Text>
-              </TouchableOpacity>
+              <View style={styles.tryButtonContainer}>
+                <LinearGradient
+                  colors={Gradients.primary}
+                  style={styles.tryButton}
+                >
+                  <Text style={styles.tryButtonText}>Try It</Text>
+                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+                </LinearGradient>
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       <SubscriptionModal
@@ -163,123 +231,192 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.light.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    gap: 12,
+    borderBottomColor: Colors.light.borderLight,
   },
   proBadge: {
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+  proBadgeGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E63946',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    gap: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    gap: 4,
   },
   proText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
+    letterSpacing: Typography.letterSpacing.wide,
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   appTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#000000',
-    letterSpacing: -0.5,
-    paddingLeft: 70,
+    fontSize: Typography.sizes['2xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+    letterSpacing: Typography.letterSpacing.tight,
+  },
+  appTitleAccent: {
+    fontSize: Typography.sizes['2xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.primary,
+    letterSpacing: Typography.letterSpacing.tight,
+  },
+  settingsButton: {
+    padding: Spacing.sm,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
   },
-  usageContainer: {
-    marginTop: 1,
-    marginBottom: 20,
-    paddingVertical: 2,
-    borderRadius: 8,
+  heroSection: {
+    margin: Spacing.base,
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    ...Shadows.lg,
+  },
+  heroGradient: {
+    padding: Spacing.xl,
+  },
+  heroContent: {
     alignItems: 'center',
   },
-  usageText: {
-    fontSize: 13,
-    color: '#666666',
-    fontWeight: '500',
+  heroTitle: {
+    fontSize: Typography.sizes['3xl'],
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  heroSubtitle: {
+    fontSize: Typography.sizes.base,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
+  },
+  heroStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.base,
+  },
+  heroStat: {
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  heroStatNumber: {
+    fontSize: Typography.sizes['2xl'],
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF',
+  },
+  heroStatLabel: {
+    fontSize: Typography.sizes.sm,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: Spacing.xs,
+  },
+  heroStatDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.base,
+    marginBottom: Spacing.base,
+  },
+  sectionTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
+  },
+  sectionSubtitle: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.light.textSecondary,
+    marginTop: Spacing.xs,
   },
   featureCard: {
-    marginBottom: 24,
-    borderRadius: 16,
+    marginHorizontal: Spacing.base,
+    marginBottom: Spacing.base,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: Colors.light.card,
+    ...Shadows.lg,
   },
   featureImage: {
     width: '100%',
-    height: 280,
-    backgroundColor: '#F5F5F5',
+    height: 200,
+    backgroundColor: Colors.light.backgroundTertiary,
   },
-  featureImageContainer: {
-    width: '100%',
-    height: 280,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  featureEmoji: {
-    fontSize: 80,
+  featureOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '70%',
   },
   featureContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: Spacing.base,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'flex-end',
   },
-  titleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  featureIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginRight: Spacing.md,
   },
   featureTextContainer: {
     flex: 1,
   },
   featureTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#000000',
-    marginBottom: 4,
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF',
+    marginBottom: Spacing.xs,
   },
   featureSubtitle: {
-    fontSize: 13,
-    color: '#999999',
-    lineHeight: 19,
+    fontSize: Typography.sizes.sm,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: Typography.sizes.sm * Typography.lineHeights.relaxed,
+  },
+  tryButtonContainer: {
+    marginLeft: Spacing.sm,
   },
   tryButton: {
-    backgroundColor: '#000000',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    gap: 4,
   },
   tryButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+  },
+  bottomSpacer: {
+    height: Spacing['2xl'],
   },
 });
 

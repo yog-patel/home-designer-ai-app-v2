@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import SubscriptionModal from '@/components/SubscriptionModal';
+import { checkUsage } from '@/config/api';
+import { getUserId } from '@/config/storage';
+import { BorderRadius, Colors, Gradients, Shadows, Spacing, Typography } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Switch,
-  Alert,
+    Alert,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getUserId } from '@/config/storage';
-import { checkUsage } from '@/config/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import SubscriptionModal from '@/components/SubscriptionModal';
 
 export default function SettingsScreen() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -56,22 +60,64 @@ export default function SettingsScreen() {
     Alert.alert('Success', `You selected ${plan} plan. Upgrade coming soon!`);
   };
 
-  const handleResetUser = () => {
-    Alert.alert(
-      'Reset User Data',
-      'This will create a new user ID and reset your design history.',
-      [
-        {
-          text: 'Reset',
-          onPress: async () => {
-            await AsyncStorage.removeItem('@homeai_user_id');
-            Alert.alert('Success', 'User data reset. Please restart the app.');
+  const handleResetUser = async () => {
+    console.log('Reset button pressed');
+    
+    // Use window.confirm for web, Alert.alert for native
+    let confirmed = false;
+    
+    if (Platform.OS === 'web') {
+      confirmed = window.confirm(
+        'Reset User Data?\n\nThis will create a new user ID and reset your design history.'
+      );
+    } else {
+      // For native platforms, we'll handle it differently
+      Alert.alert(
+        'Reset User Data',
+        'This will create a new user ID and reset your design history.',
+        [
+          {
+            text: 'Reset',
+            onPress: () => {
+              performReset();
+            },
+            style: 'destructive',
           },
-          style: 'destructive',
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+      return; // Exit early for native, performReset is called from Alert
+    }
+    
+    // For web, proceed with reset if confirmed
+    if (confirmed) {
+      performReset();
+    }
+  };
+
+  const performReset = async () => {
+    try {
+      console.log('Resetting user data...');
+      
+      // Clear the user ID
+      await AsyncStorage.removeItem('@homeai_user_id');
+      console.log('User ID removed successfully');
+      
+      // Show success message
+      if (Platform.OS === 'web') {
+        window.alert('User data reset successfully! Refresh the page to see changes.');
+      } else {
+        Alert.alert('Success', 'User data reset. Please restart the app.');
+      }
+    } catch (error) {
+      console.error('Error resetting user data:', error);
+      const errorMsg = `Failed to reset: ${error}`;
+      if (Platform.OS === 'web') {
+        window.alert(errorMsg);
+      } else {
+        Alert.alert('Error', errorMsg);
+      }
+    }
   };
 
   return (
@@ -81,12 +127,40 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Profile Header */}
+        <View style={styles.profileSection}>
+          <LinearGradient colors={Gradients.hero} style={styles.profileGradient}>
+            <View style={styles.avatarContainer}>
+              <LinearGradient colors={Gradients.primary} style={styles.avatar}>
+                <Ionicons name="person" size={32} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.profileId}>ID: {userId?.slice(0, 8)}...</Text>
+            {usage && !usage.is_premium && (
+              <View style={styles.freeTriesBadge}>
+                <Text style={styles.freeTriesText}>
+                  {Math.max(0, 3 - usage.designs_generated)} free tries remaining
+                </Text>
+              </View>
+            )}
+            {usage?.is_premium && (
+              <View style={styles.premiumBadge}>
+                <Ionicons name="star" size={14} color="#FFD700" />
+                <Text style={styles.premiumBadgeText}>Premium Member</Text>
+              </View>
+            )}
+          </LinearGradient>
+        </View>
+
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
 
           <View style={styles.card}>
             <View style={styles.cardRow}>
+              <View style={styles.cardRowIcon}>
+                <Ionicons name="finger-print-outline" size={20} color={Colors.light.primary} />
+              </View>
               <Text style={styles.cardLabel}>User ID</Text>
               <Text style={styles.cardValue} numberOfLines={1}>
                 {userId?.slice(0, 8)}...
@@ -102,6 +176,9 @@ export default function SettingsScreen() {
 
             <View style={styles.card}>
               <View style={styles.cardRow}>
+                <View style={styles.cardRowIcon}>
+                  <Ionicons name="images-outline" size={20} color={Colors.light.primary} />
+                </View>
                 <Text style={styles.cardLabel}>Designs Generated</Text>
                 <Text style={styles.cardValue}>{usage.designs_generated}</Text>
               </View>
@@ -110,8 +187,11 @@ export default function SettingsScreen() {
                 <>
                   <View style={styles.divider} />
                   <View style={styles.cardRow}>
+                    <View style={styles.cardRowIcon}>
+                      <Ionicons name="gift-outline" size={20} color={Colors.light.success} />
+                    </View>
                     <Text style={styles.cardLabel}>Free Tries Remaining</Text>
-                    <Text style={styles.cardValue}>
+                    <Text style={[styles.cardValue, { color: Colors.light.success }]}>
                       {Math.max(0, 3 - usage.designs_generated)}/3
                     </Text>
                   </View>
@@ -122,21 +202,32 @@ export default function SettingsScreen() {
                 <>
                   <View style={styles.divider} />
                   <View style={styles.cardRow}>
-                    <Text style={[styles.cardLabel, { color: '#E31C1C' }]}>
-                      Premium Member
+                    <View style={styles.cardRowIcon}>
+                      <Ionicons name="infinite-outline" size={20} color={Colors.light.primary} />
+                    </View>
+                    <Text style={[styles.cardLabel, { color: Colors.light.primary }]}>
+                      Premium Active
                     </Text>
-                    <Text style={[styles.cardValue, { color: '#E31C1C' }]}>Active</Text>
+                    <Ionicons name="checkmark-circle" size={20} color={Colors.light.success} />
                   </View>
                 </>
               )}
             </View>
 
             {!usage.is_premium && (
-              <TouchableOpacity style={styles.upgradeCard} onPress={handleUpgrade}>
-                <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
-                <Text style={styles.upgradeSubtitle}>
-                  Unlimited designs and exclusive features
-                </Text>
+              <TouchableOpacity style={styles.upgradeCard} onPress={handleUpgrade} activeOpacity={0.8}>
+                <LinearGradient colors={Gradients.primary} style={styles.upgradeGradient}>
+                  <View style={styles.upgradeContent}>
+                    <Ionicons name="rocket-outline" size={24} color="#FFFFFF" />
+                    <View style={styles.upgradeText}>
+                      <Text style={styles.upgradeTitle}>Upgrade to Premium</Text>
+                      <Text style={styles.upgradeSubtitle}>
+                        Unlimited designs and exclusive features
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
+                </LinearGradient>
               </TouchableOpacity>
             )}
           </View>
@@ -148,11 +239,14 @@ export default function SettingsScreen() {
 
           <View style={styles.card}>
             <View style={styles.switchRow}>
+              <View style={styles.cardRowIcon}>
+                <Ionicons name="notifications-outline" size={20} color={Colors.light.primary} />
+              </View>
               <Text style={styles.cardLabel}>Push Notifications</Text>
               <Switch
                 value={notifications}
                 onValueChange={handleNotifications}
-                trackColor={{ false: '#E8E8E8', true: '#E31C1C' }}
+                trackColor={{ false: Colors.light.border, true: Colors.light.primary }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -165,6 +259,9 @@ export default function SettingsScreen() {
 
           <View style={styles.card}>
             <View style={styles.cardRow}>
+              <View style={styles.cardRowIcon}>
+                <Ionicons name="information-circle-outline" size={20} color={Colors.light.primary} />
+              </View>
               <Text style={styles.cardLabel}>App Version</Text>
               <Text style={styles.cardValue}>1.0.0</Text>
             </View>
@@ -172,35 +269,54 @@ export default function SettingsScreen() {
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.linkRow}>
+              <View style={styles.cardRowIcon}>
+                <Ionicons name="shield-checkmark-outline" size={20} color={Colors.light.primary} />
+              </View>
               <Text style={styles.linkText}>Privacy Policy</Text>
-              <Text style={styles.arrow}>→</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.light.textTertiary} />
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.linkRow}>
+              <View style={styles.cardRowIcon}>
+                <Ionicons name="document-text-outline" size={20} color={Colors.light.primary} />
+              </View>
               <Text style={styles.linkText}>Terms of Service</Text>
-              <Text style={styles.arrow}>→</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.light.textTertiary} />
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.linkRow}>
+              <View style={styles.cardRowIcon}>
+                <Ionicons name="mail-outline" size={20} color={Colors.light.primary} />
+              </View>
               <Text style={styles.linkText}>Contact Support</Text>
-              <Text style={styles.arrow}>→</Text>
+              <Ionicons name="chevron-forward" size={18} color={Colors.light.textTertiary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Danger Zone */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.dangerCard} onPress={handleResetUser}>
+        <View style={styles.section} pointerEvents="auto">
+          <TouchableOpacity 
+            style={styles.dangerCard} 
+            onPress={() => {
+              console.log('TouchableOpacity pressed');
+              handleResetUser();
+            }}
+            activeOpacity={0.7}
+            accessible={true}
+            accessibilityLabel="Reset User Data"
+          >
+            <Ionicons name="trash-outline" size={20} color="#EF4444" />
             <Text style={styles.dangerText}>Reset User Data</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Made with care by home ai</Text>
+          <Text style={styles.footerText}>Made with ❤️ by home ai</Text>
         </View>
       </ScrollView>
 
@@ -216,122 +332,190 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.light.backgroundSecondary,
   },
   header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    backgroundColor: Colors.light.background,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.base,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8E8E8',
+    borderBottomColor: Colors.light.borderLight,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#000',
+    fontSize: Typography.sizes['2xl'],
+    fontWeight: Typography.weights.bold,
+    color: Colors.light.text,
   },
   content: {
     flex: 1,
-    padding: 16,
+  },
+  profileSection: {
+    marginBottom: Spacing.xl,
+  },
+  profileGradient: {
+    padding: Spacing.xl,
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    marginBottom: Spacing.md,
+  },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: BorderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileId: {
+    fontSize: Typography.sizes.sm,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: Spacing.sm,
+  },
+  freeTriesBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+  },
+  freeTriesText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+    color: '#FFFFFF',
+  },
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+  },
+  premiumBadgeText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: '#FFD700',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.base,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.textSecondary,
+    marginBottom: Spacing.sm,
     textTransform: 'uppercase',
+    letterSpacing: Typography.letterSpacing.wide,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: Colors.light.background,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
+    ...Shadows.sm,
   },
   cardRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+  },
+  cardRowIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.base,
+    backgroundColor: `${Colors.light.primary}10`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
   },
   switchRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
   },
   cardLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000',
+    flex: 1,
+    fontSize: Typography.sizes.base,
+    fontWeight: Typography.weights.medium,
+    color: Colors.light.text,
   },
   cardValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontSize: Typography.sizes.base,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.light.textSecondary,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E8E8E8',
-    marginHorizontal: 16,
+    backgroundColor: Colors.light.borderLight,
+    marginLeft: 60,
   },
   linkRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
   },
   linkText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000',
-  },
-  arrow: {
-    fontSize: 16,
-    color: '#999',
+    flex: 1,
+    fontSize: Typography.sizes.base,
+    fontWeight: Typography.weights.medium,
+    color: Colors.light.text,
   },
   upgradeCard: {
-    backgroundColor: '#FFF5F5',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#E31C1C',
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    ...Shadows.colored,
+  },
+  upgradeGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.base,
+  },
+  upgradeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  upgradeText: {
+    flex: 1,
   },
   upgradeTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#E31C1C',
-    marginBottom: 4,
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF',
   },
   upgradeSubtitle: {
-    fontSize: 13,
-    color: '#E31C1C',
-    opacity: 0.7,
+    fontSize: Typography.sizes.sm,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: Spacing.xs,
   },
   dangerCard: {
-    backgroundColor: '#FFE8E8',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#FF6B6B',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.base,
+    borderWidth: 1.5,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
   },
   dangerText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FF6B6B',
+    fontSize: Typography.sizes.base,
+    fontWeight: Typography.weights.semibold,
+    color: '#EF4444',
   },
   footer: {
-    paddingVertical: 32,
+    paddingVertical: Spacing['2xl'],
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: Typography.sizes.sm,
+    color: Colors.light.textTertiary,
   },
 });
