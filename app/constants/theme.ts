@@ -62,14 +62,14 @@ export const Colors = {
 
 // Gradient presets
 export const Gradients = {
-  primary: ['#E31C1C', '#FF4444'],
-  primaryDark: ['#B71515', '#E31C1C'],
-  dark: ['#1A1A1A', '#333333'],
-  light: ['#FFFFFF', '#F8F9FA'],
-  sunset: ['#FF6B6B', '#FF8E53'],
-  ocean: ['#667eea', '#764ba2'],
-  forest: ['#11998e', '#38ef7d'],
-  hero: ['#1A1A1A', '#2D2D2D'],
+  primary: ['#E31C1C', '#FF4444'] as const,
+  primaryDark: ['#B71515', '#E31C1C'] as const,
+  dark: ['#1A1A1A', '#333333'] as const,
+  light: ['#FFFFFF', '#F8F9FA'] as const,
+  sunset: ['#FF6B6B', '#FF8E53'] as const,
+  ocean: ['#667eea', '#764ba2'] as const,
+  forest: ['#11998e', '#38ef7d'] as const,
+  hero: ['#1A1A1A', '#2D2D2D'] as const,
 };
 
 // Typography system

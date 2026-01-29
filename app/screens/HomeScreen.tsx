@@ -5,14 +5,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SubscriptionModal from '../components/SubscriptionModal';
@@ -108,7 +108,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const getFeatureIcon = (action: string) => {
     switch (action) {
       case 'interior':
-        return 'sofa-outline';
+        return 'bed-outline';
       case 'exterior':
         return 'home-outline';
       case 'garden':
@@ -146,7 +146,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
         {/* Hero Section */}
-        <View style={styles.heroSection}>
+        {/* <View style={styles.heroSection}>
           <LinearGradient
             colors={Gradients.hero}
             style={styles.heroGradient}
@@ -169,13 +169,13 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             </View>
           </LinearGradient>
-        </View>
+        </View> */}
 
         {/* Feature Cards */}
-        <View style={styles.sectionHeader}>
+        {/* <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Design Tools</Text>
           <Text style={styles.sectionSubtitle}>Choose a tool to get started</Text>
-        </View>
+        </View> */}
 
         {features.map((feature, index) => (
           <TouchableOpacity

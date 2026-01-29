@@ -67,9 +67,9 @@ function TabNavigator() {
         tabBarActiveTintColor: Colors.light.primary,
         tabBarInactiveTintColor: Colors.light.textTertiary,
         tabBarStyle: {
-          height: Platform.OS === 'ios' ? 88 : 72,
-          paddingTop: Spacing.md,
-          paddingBottom: Platform.OS === 'ios' ? 28 : Spacing.md,
+          height: Platform.OS === 'ios' ? 95 : 80,
+          paddingTop: Spacing.sm,
+          paddingBottom: Platform.OS === 'ios' ? 28 : Spacing.base,
           backgroundColor: Colors.light.background,
           borderTopWidth: 0,
           ...Shadows.lg,
@@ -78,6 +78,7 @@ function TabNavigator() {
           fontSize: Typography.sizes.xs,
           fontWeight: Typography.weights.semibold,
           marginTop: Spacing.xs,
+          marginBottom: Spacing.xs,
         },
       }}
     >
